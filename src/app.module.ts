@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { DatabaseHelper } from './core/database/database';
+import { DatabaseHelper } from './core/database/database-helper';
 import { ProjectsModule } from './features/projects/projects.module';
 import { UsersModule } from './features/users/users.module';
 import { TasksModule } from './features/tasks/tasks.module';
