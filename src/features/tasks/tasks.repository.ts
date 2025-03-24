@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { ObjectId } from 'bson';
 import { mongodbErrorHandler } from '../../core/errors/mongodb-error-handler';
 import { TaskData, TaskDto } from './tasks.model';
 import { TaskModel } from './tasks.schema';
@@ -10,12 +11,26 @@ export class TasksRepository {
   }
 
   async getById(id: string): Promise<TaskData> {
-    const task = await TaskModel.findById(id).lean();
-    if (!task) {
+    const task = await TaskModel.aggregate([
+      {
+        $match: {
+          _id: new ObjectId(id),
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'users',
+          foreignField: '_id',
+          as: 'users',
+        },
+      },
+    ]);
+    if (!task.length) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    return task;
+    return task[0] as TaskData;
   }
   async create(task: TaskDto): Promise<TaskData> {
     try {
