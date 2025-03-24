@@ -9,7 +9,7 @@ export const ProjectSchema = new Schema(
     },
     description: {
       type: String,
-      default: ''
+      default: '',
     },
     participants: {
       type: [Schema.Types.ObjectId],
@@ -18,7 +18,7 @@ export const ProjectSchema = new Schema(
     tasks: {
       type: [Schema.Types.ObjectId],
       ref: 'Task',
-    }
+    },
   },
   { timestamps: true },
 );

@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { ObjectId } from 'bson';
 import { mongodbErrorHandler } from '../../core/errors/mongodb-error-handler';
 import { generateProjectsFilteredProjection, generateTaskCountsProjection } from './projects-agregations.helper';
 import { GroupedProjectData, ProjectData, ProjectDto, ProjectFilter } from './projects.model';
@@ -28,12 +29,39 @@ export class ProjectsRepository {
   }
 
   async getById(id: string): Promise<ProjectData> {
-    const doc = await ProjectModel.findById(id).lean();
-    if (!doc) {
+    const docs = await ProjectModel.aggregate([
+      { $match: { _id: new ObjectId(id) } },
+      {
+        $lookup: {
+          from: 'tasks',
+          localField: 'tasks',
+          foreignField: '_id',
+          as: 'tasks',
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'participants',
+          foreignField: '_id',
+          as: 'participants',
+        },
+      },
+      {
+        $project: {
+          '__v': 0,
+          'participants.createdAt': 0,
+          'participants.updatedAt': 0,
+          'participants.__v': 0,
+          'tasks.__v': 0,
+        },
+      },
+    ]);
+    if (!docs.length) {
       throw new NotFoundException(`Project with ID ${id} not found`);
     }
 
-    return doc;
+    return docs[0] as ProjectData;
   }
 
   async create(project: ProjectDto): Promise<ProjectData> {
